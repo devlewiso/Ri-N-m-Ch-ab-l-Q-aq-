@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="quc">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ri Nïm Ch'ab'äl Q'aq' (La Máquina de Creación)</title>
+
+    <!-- INICIO: Mejoras de SEO para todo el habla hispana y K'iche' -->
+    <meta name="description" content="¡Juego educativo e interactivo en K'iche'! Chajuj ri ch'utijal tiko'n rech xk'iy ri na'oj pa 17 tzij: Ajawb'äl, Na'oj, Tijonïk. Aprende K'iche' y explora ciencia, arte y más."/>
+    <meta name="keywords" content="juego para niños, juego educativo, K'iche', aprendizaje K'iche', maya, Guatemala, ciencia, arte, didáctico"/>
+    <meta name="author" content="Gemini AI"/>
+
+    <!-- Open Graph Tags (Manteniendo el español como fallback para SEO general) -->
+    <meta property="og:title" content="✨ Ri Nïm Ch'ab'äl Q'aq' (Máquina Mágica K'iche') V1.0"/>
+    <meta property="og:description" content="Juego interactivo y educativo en idioma K'iche' de Guatemala. Explora 17 desafíos de conocimiento."/>
+    <meta property="og:type" content="game"/>
+    <meta property="og:locale" content="quc_GT"/>
+    <!-- FIN: Mejoras de SEO -->
+
+    <!-- Incluir Tone.js para la generación de audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* Estilos generales para hacerlo divertido y amigable */
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #c9e6ff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border: 10px solid #a6d4fa;
+            border-radius: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 90%;
+            width: 600px;
+            transition: all 0.5s ease-in-out;
+        }
+
+        h1 {
+            color: #4a90e2;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        /* Controles de Audio */
+        .audio-controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .audio-controls label {
+            font-weight: bold;
+            color: #6a1b9a;
+            font-size: 0.9em;
+        }
+        
+        /* Estilo para el botón de Play/Pause */
+        #music-toggle-button {
+            padding: 8px 15px;
+            font-size: 1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: #FF9800;
+            color: white;
+            box-shadow: 0 3px 0 #E65100;
+            transition: all 0.2s;
+        }
+        
+        #music-toggle-button:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+
+        /* Nuevo estilo para el progreso */
+        .progress-bar {
+            color: #4CAF50;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            min-height: 20px;
+        }
+
+        p.instruction {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            min-height: 30px;
+        }
+
+        /* Área de visualización del objetivo y resultado */
+        .creation-display {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #f7f7f7, #ffffff);
+            border: 5px solid #81c784;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.5s;
+        }
+        
+        .creation-display h2 {
+            color: #4a90e2;
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        /* Estilo para el elemento visual (emoji) */
+        .visual-element {
+            font-size: 6em;
+            transition: transform 0.8s ease, opacity 0.8s ease;
+            margin-top: 10px;
+        }
+
+        /* Indicador de ingredientes */
+        .ingredient-indicators {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .indicator {
+            font-size: 2em;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .indicator.collected {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        /* Contenedor de botones */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Estilo base del botón */
+        .action-button {
+            padding: 12px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            min-width: 100px;
+            background-color: #6a1b9a; /* Color por defecto, será sobrescrito */
+        }
+
+        .action-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .action-button:disabled {
+            background-color: #ccc !important;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Mensajes */
+        #message-box {
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 20px;
+            color: #4CAF50;
+            font-size: 1.1em;
+        }
+
+        /* Estilos de éxito */
+        .success-animation {
+            animation: bounce 0.5s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0) scale(1.1); }
+            to { transform: translateY(-10px) scale(1.2); }
+        }
+
+        /* Media queries para móvil */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            .progress-bar {
+                font-size: 1em;
+            }
+            p.instruction {
+                font-size: 0.9em;
+            }
+            .creation-display {
+                height: 150px;
+            }
+            .visual-element {
+                font-size: 5em;
+            }
+            .ingredient-indicators {
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .indicator {
+                font-size: 1.5em;
+            }
+            .action-button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Título actualizado con la versión en K'iche' -->
+        <h1>✨ Ri Nïm Ch'ab'äl Q'aq' 🪄 <span style="font-size: 0.5em; vertical-align: top; color: #6a1b9a;">(Ruwäch 1.0)</span></h1>
+        
+        <!-- Controles de volumen y música -->
+        <div class="audio-controls">
+            <button id="music-toggle-button">▶️ Tikirisaj B'ix</button>
+            <label for="volume-slider">Nimäl Q'aq' (Volumen):</label>
+            <input type="range" id="volume-slider" min="-30" max="0" value="-10" step="1">
+        </div>
+
+        <div class="progress-bar" id="progress-indicator">Chuk'u'maj 1 rech 17</div>
+        
+        <p class="instruction" id="instruction-text">
+            ¡Chakoj ri sib'alaj utz tiko'n rech jikib'ax ri chuk'u'maj! (¡Usa los ingredientes correctos para completar el desafío!)
+        </p>
+
+        <div class="creation-display">
+            <h2 id="goal-text"></h2>
+            <div id="visual-output" class="visual-element"></div>
+        </div>
+        
+        <div class="ingredient-indicators" id="ingredient-indicators">
+            <!-- Indicadores de ingredientes requeridos -->
+        </div>
+
+        <div class="controls" id="game-controls">
+            <!-- Los botones se añadirán y actualizarán con JavaScript -->
+        </div>
+
+        <div id="message-box"></div>
+    </div>
+
+    <script type="module">
+        // Referencias a elementos del DOM
+        const visualOutput = document.getElementById('visual-output');
+        const instructionText = document.getElementById('instruction-text');
+        const goalText = document.getElementById('goal-text');
+        const gameControls = document.getElementById('game-controls');
+        const indicatorContainer = document.getElementById('ingredient-indicators');
+        const messageBox = document.getElementById('message-box');
+        const progressIndicator = document.getElementById('progress-indicator');
+        
+        // Elementos de audio
+        const volumeSlider = document.getElementById('volume-slider');
+        const musicToggleButton = document.getElementById('music-toggle-button');
+
+        // --- Configuración de los Desafíos (Traducidos a K'iche') ---
+        const CHALLENGES = [
+            {
+                category: "B'eyal k'aslem (Ciencias Naturales)",
+                goal: "Kotz'i'j Ch'utijal 🌸", // Flor Mágica
+                emoji: "🌺",
+                ingredients: [
+                    { name: "Juyub'", emoji: "💧", color: "#2196F3" }, // Agua
+                    { name: "Q'ij", emoji: "☀️", color: "#FFC107" }, // Sol
+                    { name: "Ajawb'äl", emoji: "🎶", color: "#9C27B0" } // Amor
+                ],
+                success: "¡Ri ija'tz xk'iy! ¡K'o la kotz'i'j ch'utijal! (¡La semilla creció! ¡Tienes una flor mágica!)"
+            },
+            {
+                category: "Ulew B'anol (Astronomía)",
+                goal: "Uwäch Ulew 🪐", // Planeta
+                emoji: "🌍",
+                ingredients: [
+                    { name: "Sutz'", emoji: "🌌", color: "#673AB7" }, // Nebulosa/Nube
+                    { name: "Jalq'atïk", emoji: "🧲", color: "#00BCD4" }, // Gravedad
+                    { name: "Pöq Q'atäj", emoji: "✨", color: "#FFEB3B" } // Polvo Estelar
+                ],
+                success: "¡Xab'än jun k'ak' uwäch ulew! (¡Creaste un nuevo mundo!)"
+            },
+            {
+                category: "Awaj (Biología)",
+                goal: "K'ïy Awaj 🦁", // León (Gran Animal)
+                emoji: "👑",
+                ingredients: [
+                    { name: "K'anäl", emoji: "💪", color: "#F44336" }, // Fuerza
+                    { name: "Tzma'äl", emoji: "🪶", color: "#FF9800" }, // Pelo/Pluma
+                    { name: "B'aq'ïn", emoji: "📣", color: "#795548" } // Rugido/Voz Fuerte
+                ],
+                success: "¡Waw! Ri ajaw rech ri k'ichelaj xel ulok. (¡Guau! El rey de la selva ha aparecido.)"
+            },
+            {
+                category: "Ch'ich' B'anol (Ingeniería)",
+                goal: "Jukub' Xik' (Cohete) 🚀", 
+                emoji: "🛰️",
+                ingredients: [
+                    { name: "Ch'ich'", emoji: "🔩", color: "#9E9E9E" }, // Metal
+                    { name: "Q'aq'al", emoji: "🔥", color: "#FF5722" }, // Combustible (Fuego/Energía)
+                    { name: "Ajxik'", emoji: "🧑‍🚀", color: "#607D8B" } // Piloto/Viajero
+                ],
+                success: "¡Utz b'i'aj! ¡Ch'ik'in pa uwäch ulew! (¡Despegue exitoso! ¡A volar por el espacio!)"
+            },
+            {
+                category: "Wäy (Cocina)",
+                goal: "Kaxlanwäy Ki' 🍰", // Pastel Dulce
+                emoji: "🎂",
+                ingredients: [
+                    { name: "Saqmo'l", emoji: "🥚", color: "#E91E63" }, // Huevos
+                    { name: "Ki'", emoji: "🍚", color: "#FFC107" }, // Azúcar (Dulce)
+                    { name: "Pïx", emoji: "♨️", color: "#795548" } // Horno/Vapor
+                ],
+                success: "¡Sib'alaj ki'! Ri kaxlanwäy xubanataj. (¡Qué delicioso! El pastel está listo.)"
+            },
+            {
+                category: "B'ix (Arte)",
+                goal: "B'ix B'anöl 🎵", // Canción Creada
+                emoji: "🎧",
+                ingredients: [
+                    { name: "Ch'ab'äl", emoji: "🎤", color: "#009688" }, // Voz/Palabra
+                    { name: "Tz'ib'", emoji: "🎸", color: "#673AB7" }, // Instrumento
+                    { name: "Komön", emoji: "🥁", color: "#CDDC39" } // Ritmo/Común
+                ],
+                success: "¡Jampa' komön! ¡Jun b'ix ch'utijal rech a'tzaj! (¡Qué ritmo! ¡Una canción mágica para bailar!)"
+            },
+            {
+                category: "K'atäl (Meteorología)",
+                goal: "Xajab' Q'ij 🌈", // Arcoíris (Arco del Sol)
+                emoji: "🌦️",
+                ingredients: [
+                    { name: "Jab'", emoji: "🌧️", color: "#03A9F4" }, // Lluvia
+                    { name: "Saq", emoji: "☀️", color: "#FFC107" }, // Claridad/Sol
+                    { name: "Ch'ajch'öj", emoji: "💎", color: "#E040FB" } // Cristales/Limpio
+                ],
+                success: "¡Q'ij b'anöl! Xel ulok jun xajab' q'ij. (¡Qué belleza! Apareció un arcoíris mágico.)"
+            },
+            {
+                category: "Tijow K'aslem (Salud)",
+                goal: "K'anäl Tijonïk 💪", // Músculo Fuerte
+                emoji: "🏃",
+                ingredients: [
+                    { name: "Tijow Wachaj", emoji: "🍎", color: "#4CAF50" }, // Comida Sana
+                    { name: "Elen Q'aq'", emoji: "🤸", color: "#3F51B5" }, // Ejercicio/Sacar Fuego
+                    { name: "Warän", emoji: "💤", color: "#9E9E9E" } // Descanso/Sueño
+                ],
+                success: "¡Sib'alaj k'anäl! Xab'än jun k'anäl rech ajch'oj. (¡Súper fuerte! Creaste un músculo de campeón.)"
+            },
+            {
+                category: "B'anöl (Arte)",
+                goal: "Wachib'äl Tz'ib' 🖼️", // Cuadro Pintado
+                emoji: "🎨",
+                ingredients: [
+                    { name: "B'onoj", emoji: "🖌️", color: "#FF9800" }, // Pintura
+                    { name: "Saq Wachaj", emoji: "⬜", color: "#EAEAEA" }, // Lienzo (Cara Blanca)
+                    { name: "Na'oj", emoji: "💡", color: "#FFEB3B" } // Idea/Pensamiento
+                ],
+                success: "¡Jun nïm b'anöl! Xab'än jun wachib'äl. (¡Una obra maestra! Creaste un cuadro muy divertido.)"
+            },
+            {
+                category: "Ajiläl (Geometría)",
+                goal: "Jutz'ut 🧊", // Cubo
+                emoji: "📐",
+                ingredients: [
+                    { name: "Ch'utij T'isïb'", emoji: "➖", color: "#333333" }, // Líneas Rectas
+                    { name: "Xukut", emoji: "⊾", color: "#795548" }, // Ángulos
+                    { name: "B'eyal Na'oj", emoji: "🧠", color: "#00BCD4" } // Lógica (Camino del Pensamiento)
+                ],
+                success: "¡Jikilal! Jun jutz'ut sib'alaj utz. (¡Qué orden! Un cubo perfecto.)"
+            },
+            {
+                category: "K'u'x (Emociones)",
+                goal: "Tze'en 😄", // Risa
+                emoji: "🥳",
+                ingredients: [
+                    { name: "Achib'il", emoji: "🧑‍🤝‍🧑", color: "#FF4081" }, // Amigos
+                    { name: "Tijob'äl", emoji: "🤣", color: "#FFAB00" }, // Bromas/Juegos
+                    { name: "Q'atïn", emoji: "🤗", color: "#8BC34A" } // Abrazos
+                ],
+                success: "¡JAJAJA! ¡Ri k'u'x sib'alaj tze'en! (¡El sentimiento más divertido de todos!)"
+            },
+            {
+                category: "Ojer Na'oj (Historia)",
+                goal: "Nïm Awaj (Dinosaurio) 🦖", // Gran Animal
+                emoji: "🦴",
+                ingredients: [
+                    { name: "B'aq", emoji: "💀", color: "#795548" }, // Huesos
+                    { name: "Ulew Ojer", emoji: "🌋", color: "#FF5722" }, // Tierra Antigua
+                    { name: "Nïm Q'ij", emoji: "⏳", color: "#FFEB3B" } // Mucho Tiempo
+                ],
+                success: "¡Roar! Jun nïm awaj sib'alaj utz. (¡Roar! Un enorme y amigable dinosaurio.)"
+            },
+            {
+                category: "Ch'ab'äl Na'oj (Tecnología)",
+                goal: "Ch'ich' Achib'il (Robot) 🤖", // Amigo de Metal
+                emoji: "⚙️",
+                ingredients: [
+                    { name: "Ch'utij B'ey", emoji: "🧠", color: "#9E9E9E" }, // Chips (Pequeño Camino/Cerebro)
+                    { name: "Tali", emoji: "🔌", color: "#FF4081" }, // Cables
+                    { name: "Q'aq'alil", emoji: "⚡", color: "#FFEB3B" } // Electricidad
+                ],
+                success: "¡BEEP BOOP! K'o la jun ch'ich' achib'il. (¡BEEP BOOP! Tienes un robot.)"
+            },
+            {
+                category: "Juyub'il (Geografía)",
+                goal: "Juyub' Q'aq' (Volcán) 🌋", // Montaña de Fuego
+                emoji: "⛰️",
+                ingredients: [
+                    { name: "Ab'äj", emoji: "🪨", color: "#607D8B" }, // Piedras
+                    { name: "Yisim", emoji: "🟠", color: "#E65100" }, // Magma (Lodo Caliente)
+                    { name: "T'uyul", emoji: "💨", color: "#B3E5FC" } // Presión/Viento
+                ],
+                success: "¡Nïm wachaj! Jun juyub' Q'aq' nïm. (¡Qué vista! Un majestuoso volcán.)"
+            },
+            {
+                category: "Ch'utijal (Magia)",
+                goal: "Tz'am Ch'ab'äl 🪄", // Varita Mágica (Palo de Herramienta)
+                emoji: "🌟",
+                ingredients: [
+                    { name: "Pöq Ixöq", emoji: "✨", color: "#FFCCBC" }, // Polvo de Hada
+                    { name: "Che'", emoji: "🪵", color: "#795548" }, // Madera
+                    { name: "Ajtiko'n", emoji: "💭", color: "#4A148C" } // Deseo
+                ],
+                success: "¡Abracadabra! Jun tz'am ch'ab'äl rech b'anöl. (¡Abracadabra! Una varita lista para cumplir un deseo.)"
+            },
+            {
+                category: "Tz'ib' B'anöl (Comunicación)",
+                goal: "K'ak' Tzij 🗣️", // Palabra Nueva
+                emoji: "📖",
+                ingredients: [
+                    { name: "Chï'il", emoji: "👄", color: "#E91E63" }, // Boca
+                    { name: "Xikïn", emoji: "👂", color: "#9E9E9E" }, // Oído
+                    { name: "Q'alajil", emoji: "❓", color: "#00BCD4" } // Significado/Claridad
+                ],
+                success: "¡Sib'alaj tze'en! Xa'tijoj jun k'ak' tzij. (¡Qué divertido! Aprendiste una palabra nueva.)"
+            },
+            {
+                category: "B'anöl Tzij (Cuentos)",
+                goal: "Ajaw Awäj (Princesa/Héroe) 👸", // Rey/Señor/Princesa
+                emoji: "🏰",
+                ingredients: [
+                    { name: "Nïm K'u'x", emoji: "🛡️", color: "#3F51B5" }, // Valor (Gran Corazón)
+                    { name: "Tzyaq", emoji: "👗", color: "#FF9800" }, // Vestido/Capa
+                    { name: "Nimaja", emoji: "👑", color: "#BCAAA4" } // Castillo/Gran Casa
+                ],
+                success: "¡Jun utz k'isib'äl! Ri ajaw awäj rutz'iban ru b'ey. (¡Un final feliz! El héroe/princesa está listo para su aventura.)"
+            }
+        ];
+        
+        const TOTAL_CHALLENGES = CHALLENGES.length; // 17 ahora
+
+        // Estado actual del juego
+        let currentChallengeIndex = 0;
+        let collectedIngredients = [];
+        
+        // --- LÓGICA DE AUDIO ---
+        let synth, loop, musicStarted = false;
+        
+        // Función para inicializar y empezar la música
+        async function startMusic() {
+            // Tone.js requiere que se inicie el contexto de audio después de una interacción del usuario
+            await Tone.start();
+            
+            // Si la música ya se inició, solo reanudar
+            if (musicStarted) {
+                Tone.getTransport().start();
+                musicToggleButton.textContent = "⏸️ Chaq'atäj B'ix";
+                return;
+            }
+
+            // Inicializar el sintetizador (para un sonido alegre)
+            synth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "triangle" },
+                envelope: {
+                    attack: 0.05,
+                    decay: 0.1,
+                    sustain: 0.3,
+                    release: 1
+                }
+            }).toDestination();
+            
+            // Aplicar el volumen inicial del slider
+            synth.volume.value = volumeSlider.value; 
+
+            // Melodía simple y alegre (escala mayor)
+            const notes = ["C4", "E4", "G4", "A4", "G4", "E4", "C4", "G3"];
+            let noteIndex = 0;
+
+            // Crear el loop de repetición
+            loop = new Tone.Loop(time => {
+                const note = notes[noteIndex % notes.length];
+                synth.triggerAttackRelease(note, "8n", time);
+                noteIndex++;
+            }, "4n").start(0);
+
+            // Iniciar el transporte (el "reloj" de la música)
+            Tone.getTransport().bpm.value = 120; // Ritmo
+            Tone.getTransport().start();
+
+            musicStarted = true;
+            musicToggleButton.textContent = "⏸️ Chaq'atäj B'ix"; // Pausar Música
+        }
+        
+        // Función para pausar la música
+        function stopMusic() {
+            if (musicStarted) {
+                Tone.getTransport().pause();
+                musicToggleButton.textContent = "▶️ Tikirisaj B'ix"; // Reanudar Música
+            }
+        }
+
+        // Event listener para el botón de Play/Pause
+        musicToggleButton.addEventListener('click', () => {
+            if (!musicStarted || Tone.getTransport().state === 'stopped' || Tone.getTransport().state === 'paused') {
+                startMusic();
+            } else {
+                stopMusic();
+            }
+        });
+        
+        // Event listener para el control de volumen
+        volumeSlider.addEventListener('input', (event) => {
+            // El valor del slider es en decibelios (dB), Tone.js lo usa directamente
+            if (synth) {
+                synth.volume.value = event.target.value;
+            }
+        });
+
+        // --- LÓGICA DEL JUEGO ---
+
+        /**
+         * Maneja el clic en un botón de ingrediente.
+         * @param {string} ingredientName - El nombre del ingrediente clickeado.
+         */
+        function handleActionClick(ingredientName) {
+            messageBox.textContent = '';
+            
+            // Verificar si el ingrediente ya fue recolectado
+            if (collectedIngredients.includes(ingredientName)) {
+                // Mostrar un mensaje más amigable para niños en K'iche'
+                messageBox.textContent = `¡K'o chi ${ingredientName} awuk'! Xa jun tiko'n chikajawaxik. (¡Ya tienes ${ingredientName}! Necesitas otro ingrediente.)`;
+                messageBox.style.color = '#FFA000'; // Naranja
+                return;
+            }
+
+            // Agregar el nuevo ingrediente
+            collectedIngredients.push(ingredientName);
+
+            // 1. Actualizar visuales (indicadores y mensaje)
+            updateIngredientIndicators();
+            // Mensaje de acción en K'iche'
+            messageBox.textContent = `¡Xaya ${ingredientName}! ¡Q'axawa'! (¡Añadiste ${ingredientName}! ¡Sigue así!)`;
+            messageBox.style.color = '#4CAF50'; // Verde
+
+            // 2. Comprobar si se completó el desafío
+            const currentChallenge = CHALLENGES[currentChallengeIndex];
+            if (collectedIngredients.length === currentChallenge.ingredients.length) {
+                // Desafío completado, mostrar el éxito y preparar el botón Siguiente
+                showSuccess(currentChallenge);
+                visualOutput.classList.add('success-animation');
+            }
+        }
+
+        /**
+         * Muestra el resultado de éxito y prepara el botón para avanzar.
+         */
+        function showSuccess(challenge) {
+            visualOutput.textContent = challenge.emoji;
+            messageBox.textContent = challenge.success; // Mensaje de éxito traducido
+            messageBox.style.color = '#4A148C'; // Morado
+            instructionText.textContent = `¡Xab'anataj ri tzij: ${challenge.category}! (¡Completaste la categoría!)`;
+
+            // Ocultar botones de ingredientes y mostrar botón Siguiente
+            gameControls.innerHTML = ''; 
+
+            const nextButton = document.createElement('button');
+            
+            // Verificar si es el último desafío
+            const isLastChallenge = currentChallengeIndex === TOTAL_CHALLENGES - 1;
+
+            nextButton.textContent = isLastChallenge
+                                     ? "¡Chajäl Q'ij! 🚀" // Volver a Empezar
+                                     : "¡Chuk'u'maj Xa'an! 👉"; // Siguiente Desafío
+            nextButton.className = 'action-button';
+            nextButton.style.backgroundColor = isLastChallenge ? '#f44336' : '#00C853';
+            nextButton.addEventListener('click', handleNextChallenge);
+            gameControls.appendChild(nextButton);
+        }
+
+        /**
+         * Maneja el avance al siguiente desafío o reinicio.
+         */
+        function handleNextChallenge() {
+            visualOutput.classList.remove('success-animation');
+            collectedIngredients = []; // Resetear ingredientes
+
+            if (currentChallengeIndex < TOTAL_CHALLENGES - 1) {
+                currentChallengeIndex++; // Avanzar
+            } else {
+                currentChallengeIndex = 0; // Reiniciar
+            }
+
+            updateGameView();
+        }
+
+
+        /**
+         * Crea y actualiza los indicadores visuales de los ingredientes requeridos.
+         */
+        function updateIngredientIndicators() {
+            const currentChallenge = CHALLENGES[currentChallengeIndex];
+            indicatorContainer.innerHTML = '';
+
+            currentChallenge.ingredients.forEach(ing => {
+                const indicator = document.createElement('span');
+                indicator.textContent = ing.emoji;
+                indicator.className = 'indicator';
+                
+                // Si el ingrediente está recolectado, hacerlo visible
+                if (collectedIngredients.includes(ing.name)) {
+                    indicator.classList.add('collected');
+                }
+                indicatorContainer.appendChild(indicator);
+            });
+        }
+
+
+        /**
+         * Actualiza la interfaz del juego (visuales, texto y botones).
+         */
+        function updateGameView() {
+            const currentChallenge = CHALLENGES[currentChallengeIndex];
+            
+            // 0. Actualizar el indicador de progreso en K'iche'
+            progressIndicator.textContent = `Chuk'u'maj ${currentChallengeIndex + 1} rech ${TOTAL_CHALLENGES}`;
+
+            // 1. Mostrar información del desafío actual
+            goalText.textContent = `Chuk'u'maj: ${currentChallenge.goal} (${currentChallenge.category})`;
+            // Instrucción principal traducida
+            instructionText.textContent = `¡Chakoj ri 3 tiko'n rech b'anöl ${currentChallenge.goal.split(' ')[0]}! (¡Busca los 3 ingredientes para crear un(a) ${currentChallenge.goal.split(' ')[0]}!)`;
+            visualOutput.textContent = currentChallenge.emoji;
+            visualOutput.style.transform = 'scale(1)';
+            messageBox.textContent = '';
+
+            // 2. Crear los botones de acción (ingredientes)
+            gameControls.innerHTML = '';
+            currentChallenge.ingredients.forEach(ing => {
+                const button = document.createElement('button');
+                // Mostrar el nombre del ingrediente en K'iche'
+                button.textContent = `${ing.emoji} ${ing.name}`; 
+                button.className = 'action-button';
+                button.style.backgroundColor = ing.color;
+                
+                // Deshabilitar si ya está recolectado
+                if (collectedIngredients.includes(ing.name)) {
+                    button.disabled = true;
+                } else {
+                    // Usar bind para pasar el nombre del ingrediente al hacer click
+                    button.addEventListener('click', () => handleActionClick(ing.name));
+                }
+                gameControls.appendChild(button);
+            });
+
+            // 3. Actualizar los indicadores
+            updateIngredientIndicators();
+        }
+
+        // Inicializar el juego al cargar la ventana
+        window.onload = updateGameView;
+
+    </script>
+</body>
+</html>
